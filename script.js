@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitSearch = document.getElementById("submitSearch");
   const results = document.getElementById("results");
   const sortingButtons = document.getElementById("sortingButtons");
+  const myWatchList = document.getElementById("myWatchList");
 
   const apiKey = "0db2b210052ac2389b97a0d37eb57c9b";
 
@@ -86,6 +87,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+const watchList = [];
+
 function displayMovieInfo(apiArray) {
   for (let i = 0; i < apiArray.length; i++) {
     const resultDiv = document.createElement("div");
@@ -116,52 +119,87 @@ function displayMovieInfo(apiArray) {
     resultDiv.appendChild(releaseDate);
 
     const genres = document.createElement("p");
-    const allGenres = apiArray[i].genre_ids.map((genreId) => {
-      if (genreId === 28) {
-        return "Action";
-      } else if (genreId === 12) {
-        return "Adventure";
-      } else if (genreId === 16) {
-        return "Animation";
-      } else if (genreId === 35) {
-        return "Comedy";
-      } else if (genreId === 80) {
-        return "Crime";
-      } else if (genreId === 99) {
-        return "Documentary";
-      } else if (genreId === 18) {
-        return "Drama";
-      } else if (genreId === 10751) {
-        return "Family";
-      } else if (genreId === 14) {
-        return "Fantasy";
-      } else if (genreId === 36) {
-        return "History";
-      } else if (genreId === 27) {
-        return "Horror";
-      } else if (genreId === 10402) {
-        return "Music";
-      } else if (genreId === 9648) {
-        return "Mystery";
-      } else if (genreId === 10749) {
-        return "Romance";
-      } else if (genreId === 878) {
-        return "Science Fiction";
-      } else if (genreId === 10770) {
-        return "TV Movie";
-      } else if (genreId === 53) {
-        return "Thriller";
-      } else if (genreId === 10752) {
-        return "War";
-      } else if (genreId === 37) {
-        return "Western";
+    const allGenre = [];
+    allGenre.push(apiArray[i].genre_ids);
+    allGenreIds = allGenre.flat(Infinity);
+    const genreMappings = {
+      12: "Adventure",
+      16: "Animation",
+      35: "Comedy",
+      80: "Crime",
+      99: "Documentary",
+      18: "Drama",
+      10751: "Family",
+      14: "Fantasy",
+      36: "History",
+      27: "Horror",
+      10402: "Music",
+      9648: "Mystery",
+      10749: "Romance",
+      878: "Science Fiction",
+      10770: "TV Movie",
+      53: "Thriller",
+      10752: "War",
+      37: "Western",
+    };
+    for (let i = 0; i < allGenreIds.length; i++) {
+      if (genreMappings.hasOwnProperty(allGenreIds[i])) {
+        allGenreIds[i] = genreMappings[allGenreIds[i]];
       } else {
-        return "Unknown";
+        allGenreIds[i] = "";
+      }
+    }
+    genres.textContent = allGenreIds.join(" ");
+    resultDiv.appendChild(genres);
+
+    const addToWatchList = document.createElement("button");
+    addToWatchList.textContent = "add to watch list";
+    resultDiv.appendChild(addToWatchList);
+
+    const removeFromWatchList = document.createElement("button");
+    removeFromWatchList.textContent = "remove from watch list";
+    removeFromWatchList.disabled = true;
+    resultDiv.appendChild(removeFromWatchList);
+
+    //add film to watchlist
+    addToWatchList.addEventListener("click", function () {
+      myWatchList.textContent = "";
+      removeFromWatchList.disabled = false;
+      addToWatchList.disabled = true;
+      const filmInfo = {
+        filmTitle: apiArray[i].title,
+        filmInfo: apiArray[i].overview,
+        filmPoster: `https://image.tmdb.org/t/p/w400${apiArray[i].poster_path}`,
+      };
+//checks if film already exists in array
+      const watchListAlreadyContainsFilm = (film) =>
+        film.filmTitle === apiArray[i].title &&
+        film.filmInfo === apiArray[i].overview;
+
+      if (watchList.some(watchListAlreadyContainsFilm) === false) {
+        watchList.push(filmInfo);
+      }
+      myWatchList.style.whiteSpace = "pre";
+      for (let i = 0; i < watchList.length; i++) {
+        myWatchList.textContent += `${watchList[i].filmTitle}\n`;
       }
     });
-
-    console.log(allGenres);
-    genres.textContent = allGenres.join(" ");
-    resultDiv.appendChild(genres);
+//removes film from watchlist
+    removeFromWatchList.addEventListener("click", function () {
+      myWatchList.textContent = '';
+      addToWatchList.disabled = false;
+      removeFromWatchList.disabled = true;
+    
+      const indexToRemove = watchList.findIndex(film => film.filmTitle === apiArray[i].title && film.filmInfo === apiArray[i].overview);
+    
+      if (indexToRemove !== -1) { // -1 = no elements match film finder function
+        watchList.splice(indexToRemove, 1);
+      }
+      myWatchList.style.whiteSpace = "pre";
+      for (let i = 0; i < watchList.length; i++) {
+        myWatchList.textContent += `${watchList[i].filmTitle}\n`;
+      }
+    });
+    
   }
 }
