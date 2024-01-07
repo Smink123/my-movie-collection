@@ -152,54 +152,95 @@ function displayMovieInfo(apiArray) {
     genres.textContent = allGenreIds.join(" ");
     resultDiv.appendChild(genres);
 
+    // Add film to watchlist
     const addToWatchList = document.createElement("button");
     addToWatchList.textContent = "add to watch list";
+    checkButtonStatus(apiArray, i, false, addToWatchList);
     resultDiv.appendChild(addToWatchList);
 
     const removeFromWatchList = document.createElement("button");
     removeFromWatchList.textContent = "remove from watch list";
-    removeFromWatchList.disabled = true;
+    checkButtonStatus(apiArray, i, true, removeFromWatchList);
     resultDiv.appendChild(removeFromWatchList);
 
-    //add film to watchlist
     addToWatchList.addEventListener("click", function () {
-      myWatchList.textContent = "";
-      removeFromWatchList.disabled = false;
       addToWatchList.disabled = true;
+      removeFromWatchList.disabled = false;
       const filmInfo = {
         filmTitle: apiArray[i].title,
         filmInfo: apiArray[i].overview,
         filmPoster: `https://image.tmdb.org/t/p/w400${apiArray[i].poster_path}`,
       };
-//checks if film already exists in array
       const watchListAlreadyContainsFilm = (film) =>
         film.filmTitle === apiArray[i].title &&
         film.filmInfo === apiArray[i].overview;
-
-      if (watchList.some(watchListAlreadyContainsFilm) === false) {
+      if (!watchList.some(watchListAlreadyContainsFilm)) {
         watchList.push(filmInfo);
-      }
-      myWatchList.style.whiteSpace = "pre";
-      for (let i = 0; i < watchList.length; i++) {
-        myWatchList.textContent += `${watchList[i].filmTitle}\n`;
+        updateWatchList();
       }
     });
-//removes film from watchlist
+
     removeFromWatchList.addEventListener("click", function () {
-      myWatchList.textContent = '';
+      removeFromWatchListHandler(apiArray, i);
+      updateWatchList();
+    });
+
+    function updateWatchList() {
+      myWatchList.textContent = "";
+      myWatchList.style.whiteSpace = "pre";
+
+      for (let i = 0; i < watchList.length; i++) {
+        const watchlistFilmDiv = document.createElement("div");
+        watchlistFilmDiv.classList.add("watchlistFilmDiv");
+        myWatchList.appendChild(watchlistFilmDiv);
+
+        const watchListFilmTitle = document.createElement("p");
+        watchListFilmTitle.textContent = `${watchList[i].filmTitle}\n`;
+        watchlistFilmDiv.appendChild(watchListFilmTitle);
+
+        const testButton = document.createElement("button");
+        testButton.textContent = `remove ${watchList[i].filmTitle} from watch list`;
+        watchlistFilmDiv.appendChild(testButton);
+
+        testButton.addEventListener("click", function () {
+          removeFromWatchList.disabled = true;
+          removeFilmFromWatchList(watchList[i].filmTitle);
+          addToWatchList.disabled = false;
+          updateWatchList();
+        });
+      }
+    }
+
+    function removeFilmFromWatchList(titleToRemove) {
+      const indexToRemove = watchList.findIndex(
+        (film) => film.filmTitle === titleToRemove
+      );
+      watchList.splice(indexToRemove, 1);
+    }
+
+    function removeFromWatchListHandler(apiArray, index) {
+      myWatchList.textContent = "";
       addToWatchList.disabled = false;
       removeFromWatchList.disabled = true;
-    
-      const indexToRemove = watchList.findIndex(film => film.filmTitle === apiArray[i].title && film.filmInfo === apiArray[i].overview);
-    
-      if (indexToRemove !== -1) { // -1 = no elements match film finder function
+      const indexToRemove = watchList.findIndex(
+        (film) =>
+          film.filmTitle === apiArray[index].title &&
+          film.filmInfo === apiArray[index].overview
+      );
+      if (indexToRemove !== -1) {
         watchList.splice(indexToRemove, 1);
       }
-      myWatchList.style.whiteSpace = "pre";
-      for (let i = 0; i < watchList.length; i++) {
-        myWatchList.textContent += `${watchList[i].filmTitle}\n`;
-      }
-    });
-    
+    }
+  }
+
+  function checkButtonStatus(apiArray, i, arrayBoolean, button) {
+    const watchListAlreadyContainsFilmTwo = (film) =>
+      film.filmTitle === apiArray[i].title &&
+      film.filmInfo === apiArray[i].overview;
+    if (watchList.some(watchListAlreadyContainsFilmTwo) === arrayBoolean) {
+      button.disabled = false;
+    } else {
+      button.disabled = true;
+    }
   }
 }
